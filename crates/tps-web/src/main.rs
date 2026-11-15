@@ -92,6 +92,9 @@ fn la_lenh_doc(ten: &str) -> bool {
         "ck.bankInfo",
         "ck.getSettings",
         "ck.coChe",
+        "app.ping",
+        "app.version",
+        "app.checkUpdate",
     ];
     if LENH_DOC.contains(&ten) {
         return true;

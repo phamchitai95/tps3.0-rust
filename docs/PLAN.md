@@ -20,4 +20,5 @@ Baseline tham chiếu: tps59 build **276** / migrate **27**.
 6. **S4** done (subset) — `luong.preview|lichsu`, `bl.ds|gv`, `phieuchi.list` (`tps-payroll`)  
 7. **S4b** done (subset) — `bl.khautru|khautruXoa|chot|mo`, `bl.ck.ds|xuat|tai|huy` (CSV; xlsx MB sau)  
 8. **S5** done (subset) — `tps-web` axum: `POST /api/<cmd>`, Bearer session, `web.thongtin|maychu`, `/pay2s/push`  
-9. S6 OTA + print → S7 so sánh backup thật
+9. **S6** done (subset) — `app.checkUpdate` (GitHub Releases), `hocphi.receipt` (text biên lai)  
+10. S7 so sánh backup thật

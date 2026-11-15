@@ -11,11 +11,13 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 type Me = { hotennv?: string; tendangnhap?: string; chucvu?: number } | null;
 
 let me: Me = null;
-let tab: "hs" | "congno" | "ck" | "luong" = "hs";
+let tab: "hs" | "congno" | "ck" | "luong" | "hethong" = "hs";
 let selectedHs: number | null = null;
 let lastMsg = "";
 let lastErr = "";
 let busy = false;
+let lastReceiptIds: number[] = [];
+let lastReceiptText = "";
 
 function money(n: number): string {
   return new Intl.NumberFormat("vi-VN").format(n) + " đ";
@@ -131,6 +133,7 @@ async function shellView() {
         <button type="button" data-tab="congno" class="${tab === "congno" ? "active" : ""}">Công nợ / Thu TM</button>
         <button type="button" data-tab="ck" class="${tab === "ck" ? "active" : ""}">Chuyển khoản</button>
         <button type="button" data-tab="luong" class="${tab === "luong" ? "active" : ""}">Lương GV</button>
+        <button type="button" data-tab="hethong" class="${tab === "hethong" ? "active" : ""}">Hệ thống</button>
       </div>
       <div class="panel" id="main"></div>
       ${lastErr ? `<p class="err">${escapeHtml(lastErr)}</p>` : ""}
@@ -148,7 +151,8 @@ async function shellView() {
   if (tab === "hs") await renderHs(main);
   else if (tab === "congno") await renderCongno(main);
   else if (tab === "ck") await renderCk(main);
-  else await renderLuong(main);
+  else if (tab === "luong") await renderLuong(main);
+  else await renderHeThong(main);
 }
 
 async function renderHs(main: HTMLDivElement) {
@@ -213,7 +217,9 @@ async function renderCongno(main: HTMLDivElement) {
           <p class="meta">Quỹ hiện tại: ${money(Number(quy.tienhientai || 0))}</p>
           <p class="meta" id="picked">Chưa chọn kỳ.</p>
           <button type="button" id="collect" ${busy ? "disabled" : ""}>Thu đúng số còn lại (TM)</button>
+          <button type="button" id="receipt" class="ghost" ${busy || !lastReceiptIds.length ? "disabled" : ""}>Xem biên lai</button>
           <pre class="out" id="out"></pre>
+          ${lastReceiptText ? `<pre class="out" id="receiptout">${escapeHtml(lastReceiptText)}</pre>` : ""}
         </div>
       </div>
     `;
@@ -236,19 +242,87 @@ async function renderCongno(main: HTMLDivElement) {
       }
       const item = pick;
       void withBusy(async () => {
-        const r = await api("hocphi.collect", {
+        const r = (await api("hocphi.collect", {
           hocsinhid: selectedHs!,
           hinhthuc: "TM",
           items: [{ kyid: item.kyid, sotien: item.sotien }],
           ghichu: "UI TPS 3.0",
-        });
+        })) as Record<string, Json>;
         out.textContent = JSON.stringify(r, null, 2);
+        const ids = extractReceiptIds(r);
+        lastReceiptIds = ids;
+        if (ids.length) {
+          const bl = (await api("hocphi.receipt", { ids })) as Record<string, Json>;
+          lastReceiptText = String(bl.text || "");
+        }
         setStatus(`Đã thu ${money(item.sotien)}.`);
+      });
+    });
+    document.querySelector("#receipt")?.addEventListener("click", () => {
+      if (!lastReceiptIds.length) return;
+      void withBusy(async () => {
+        const bl = (await api("hocphi.receipt", { ids: lastReceiptIds })) as Record<string, Json>;
+        lastReceiptText = String(bl.text || "");
+        out.textContent = JSON.stringify(bl, null, 2);
+        setStatus("Đã tải biên lai (text).");
       });
     });
   } catch (e) {
     main.innerHTML = `<p class="err">${escapeHtml(String(e))}</p>`;
   }
+}
+
+function extractReceiptIds(r: Record<string, Json>): number[] {
+  const candidates = [r.ids, r.lineids, r.phieuthu];
+  for (const c of candidates) {
+    if (Array.isArray(c)) {
+      const ids = c
+        .map((x) => {
+          if (typeof x === "number") return x;
+          if (x && typeof x === "object") {
+            const o = x as Record<string, Json>;
+            return Number(o.lineid ?? o.id ?? 0);
+          }
+          return Number(x);
+        })
+        .filter((n) => Number.isFinite(n) && n > 0);
+      if (ids.length) return ids;
+    }
+  }
+  const one = Number(r.lineid ?? 0);
+  return one > 0 ? [one] : [];
+}
+
+async function renderHeThong(main: HTMLDivElement) {
+  main.innerHTML = `
+    <h2 style="margin:0 0 .75rem;font:600 1.1rem Literata,serif">Hệ thống (S6)</h2>
+    <p class="meta">Phiên bản · kiểm tra cập nhật GitHub Releases · biên lai text gần nhất.</p>
+    <div class="row">
+      <button type="button" id="ver">Xem phiên bản</button>
+      <button type="button" id="ota" ${busy ? "disabled" : ""}>Kiểm tra cập nhật</button>
+    </div>
+    <pre class="out" id="sysout" style="margin-top:1rem"></pre>
+    ${lastReceiptText ? `<h2 style="margin:1rem 0 .5rem;font:600 1.05rem Literata,serif">Biên lai gần nhất</h2><pre class="out">${escapeHtml(lastReceiptText)}</pre>` : ""}
+  `;
+  const out = () => document.querySelector("#sysout")!;
+  document.querySelector("#ver")!.addEventListener("click", () => {
+    void withBusy(async () => {
+      const r = await api("app.version");
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus("Đã tải app.version.");
+    });
+  });
+  document.querySelector("#ota")!.addEventListener("click", () => {
+    void withBusy(async () => {
+      const r = (await api("app.checkUpdate", {})) as Record<string, Json>;
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus(String(r.message || "Đã kiểm tra cập nhật."));
+    });
+  });
+  void withBusy(async () => {
+    const r = await api("app.version");
+    out().textContent = JSON.stringify(r, null, 2);
+  });
 }
 
 async function renderCk(main: HTMLDivElement) {

@@ -50,6 +50,7 @@ impl Api {
         };
         api.register("app.ping", Arc::new(Ping));
         api.register("app.version", Arc::new(Version));
+        api.register("app.checkUpdate", Arc::new(AppCheckUpdate));
         api.register("app.init", Arc::new(AppInit));
         api.register("auth.login", Arc::new(AuthLogin));
         api.register("auth.logout", Arc::new(AuthLogout));
@@ -69,6 +70,7 @@ impl Api {
         api.register("kyhp.sync", Arc::new(KyhpSync));
         api.register("kyhp.list", Arc::new(KyhpList));
         api.register("hocphi.collect", Arc::new(HocphiCollect));
+        api.register("hocphi.receipt", Arc::new(HocphiReceipt));
         api.register("congno.list", Arc::new(CongnoList));
         api.register("quy.get", Arc::new(QuyGet));
         // pay / VietQR / Pay2S (S3)
@@ -144,20 +146,178 @@ impl Handler for Ping {
     }
 }
 
+/// App build number — bump mỗi sprint đóng gói.
+pub const APP_BUILD: i32 = 2;
+pub const APP_VERSION: &str = "0.1.0";
+/// Repo GitHub Releases dùng cho OTA (`owner/name`). Override: `TPS_OTA_REPO`.
+pub const DEFAULT_OTA_REPO: &str = "phamchitai95/tps3.0-rust";
+
 struct Version;
 #[async_trait]
 impl Handler for Version {
     async fn call(&self, _state: &AppState, _args: Args) -> HandlerResult {
-        const BUILD: i32 = 1;
         Ok(json!({
             "name": "tps3.0-rust",
-            "version": "0.1.0",
-            "build": BUILD,
-            "buildHienThi": so_build_hien_thi(BUILD),
+            "version": APP_VERSION,
+            "build": APP_BUILD,
+            "buildHienThi": so_build_hien_thi(APP_BUILD),
             "migrateVersion": MIGRATE_VERSION,
             "ui": "tauri2",
             "ota": "github-releases",
+            "otaRepo": std::env::var("TPS_OTA_REPO").unwrap_or_else(|_| DEFAULT_OTA_REPO.into()),
         }))
+    }
+}
+
+/// `app.checkUpdate` — so sánh bản hiện tại với GitHub Releases latest (S6).
+/// Cài đặt updater plugin + ký gói: xem `docs/RELEASE.md` (chưa bắt buộc signing để build).
+struct AppCheckUpdate;
+#[async_trait]
+impl Handler for AppCheckUpdate {
+    async fn call(&self, _state: &AppState, args: Args) -> HandlerResult {
+        let repo = args
+            .get("repo")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| std::env::var("TPS_OTA_REPO").ok())
+            .unwrap_or_else(|| DEFAULT_OTA_REPO.into());
+        if !repo.contains('/') || repo.contains("..") {
+            return Err(AppError::msg("repo OTA không hợp lệ (cần owner/name)."));
+        }
+        let url = format!("https://api.github.com/repos/{repo}/releases/latest");
+        let client = reqwest::Client::builder()
+            .user_agent(format!("tps3.0-rust/{APP_VERSION}"))
+            .timeout(std::time::Duration::from_secs(20))
+            .build()
+            .map_err(|e| AppError::msg(e.to_string()))?;
+        let resp = client
+            .get(&url)
+            .header(reqwest::header::ACCEPT, "application/vnd.github+json")
+            .send()
+            .await
+            .map_err(|e| AppError::msg(format!("Không gọi được GitHub Releases: {e}")))?;
+        let status = resp.status();
+        if status.as_u16() == 404 {
+            return Ok(json!({
+                "ok": true,
+                "update": false,
+                "current": { "version": APP_VERSION, "build": APP_BUILD },
+                "latest": Value::Null,
+                "repo": repo,
+                "message": "Chưa có release trên GitHub.",
+            }));
+        }
+        if !status.is_success() {
+            let body = resp.text().await.unwrap_or_default();
+            return Err(AppError::msg(format!(
+                "GitHub Releases HTTP {status}: {}",
+                body.chars().take(200).collect::<String>()
+            )));
+        }
+        let body: Value = resp
+            .json()
+            .await
+            .map_err(|e| AppError::msg(format!("JSON release lỗi: {e}")))?;
+        let tag = body
+            .get("tag_name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .trim()
+            .trim_start_matches('v')
+            .to_string();
+        let name = body
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let html_url = body
+            .get("html_url")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let published = body
+            .get("published_at")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let notes = body
+            .get("body")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .chars()
+            .take(2000)
+            .collect::<String>();
+        let assets: Vec<Value> = body
+            .get("assets")
+            .and_then(|v| v.as_array())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|x| {
+                        let n = x.get("name")?.as_str()?;
+                        let u = x.get("browser_download_url")?.as_str()?;
+                        Some(json!({ "name": n, "url": u }))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        let update = !tag.is_empty() && version_is_newer(&tag, APP_VERSION);
+        Ok(json!({
+            "ok": true,
+            "update": update,
+            "current": { "version": APP_VERSION, "build": APP_BUILD },
+            "latest": {
+                "version": tag,
+                "name": name,
+                "url": html_url,
+                "publishedAt": published,
+                "notes": notes,
+                "assets": assets,
+            },
+            "repo": repo,
+            "message": if update {
+                format!("Có bản mới {tag} (đang chạy {APP_VERSION}).")
+            } else if tag.is_empty() {
+                "Không đọc được tag release.".into()
+            } else {
+                format!("Đang ở bản mới nhất ({APP_VERSION}).")
+            },
+        }))
+    }
+}
+
+/// SemVer đơn giản: so sánh từng số; tag không parse được → coi là khác/mới nếu ≠ current.
+fn version_is_newer(latest: &str, current: &str) -> bool {
+    fn parts(s: &str) -> Vec<u64> {
+        s.split(|c: char| !c.is_ascii_digit())
+            .filter(|p| !p.is_empty())
+            .filter_map(|p| p.parse().ok())
+            .collect()
+    }
+    let a = parts(latest);
+    let b = parts(current);
+    if a.is_empty() {
+        return latest != current;
+    }
+    for i in 0..a.len().max(b.len()) {
+        let x = a.get(i).copied().unwrap_or(0);
+        let y = b.get(i).copied().unwrap_or(0);
+        if x != y {
+            return x > y;
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod version_cmp_tests {
+    use super::version_is_newer;
+
+    #[test]
+    fn newer_patch() {
+        assert!(version_is_newer("0.1.1", "0.1.0"));
+        assert!(!version_is_newer("0.1.0", "0.1.0"));
+        assert!(!version_is_newer("0.1.0", "0.2.0"));
+        assert!(version_is_newer("1.0.0", "0.9.9"));
     }
 }
 
@@ -431,6 +591,16 @@ impl Handler for HocphiCollect {
         let mut c = client(state).await?;
         let ctx = state.ctx.lock().await;
         tps_tuition::hocphi_collect(&mut c, &ctx, &args).await
+    }
+}
+
+struct HocphiReceipt;
+#[async_trait]
+impl Handler for HocphiReceipt {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_tuition::hocphi_receipt(&c, &ctx, &args).await
     }
 }
 
