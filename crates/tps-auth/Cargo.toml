@@ -1,0 +1,17 @@
+[package]
+name = "tps-auth"
+version.workspace = true
+edition.workspace = true
+description = "Login, roles, scrypt passwords — port of tps59 auth.dart"
+
+[dependencies]
+tps-types = { workspace = true }
+serde_json = { workspace = true }
+sha2 = "0.10"
+scrypt = "0.11"
+rand = "0.8"
+hex = "0.4"
+regex = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

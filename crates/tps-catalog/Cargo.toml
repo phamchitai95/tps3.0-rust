@@ -1,0 +1,21 @@
+[package]
+name = "tps-catalog"
+version.workspace = true
+edition.workspace = true
+description = "Catalog read handlers — mon/gv/hs/lop/nv (S1)"
+
+[dependencies]
+tps-types = { workspace = true }
+tps-db = { workspace = true }
+tps-auth = { workspace = true }
+tps-logic = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tokio-postgres = { workspace = true }
+deadpool-postgres = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+tps-db = { workspace = true }
+tps-auth = { workspace = true }
+serde_json = { workspace = true }

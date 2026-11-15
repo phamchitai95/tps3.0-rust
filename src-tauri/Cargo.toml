@@ -20,4 +20,5 @@ serde_json = { workspace = true }
 tps-api = { workspace = true }
 tps-types = { workspace = true }
 tps-logic = { workspace = true }
+tps-db = { workspace = true }
 tokio = { workspace = true }

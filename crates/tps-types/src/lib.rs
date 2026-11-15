@@ -1,13 +1,12 @@
 //! Shared types for TPS 3.0 (Rust rewrite of TC59 / tps59).
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
+use serde_json::{Map, Value};
 use thiserror::Error;
 
 /// Row shape matching the Dart/Node 1.0 API: string keys, JSON-friendly values.
-pub type Row = HashMap<String, Value>;
-pub type Args = HashMap<String, Value>;
+pub type Row = Map<String, Value>;
+pub type Args = Map<String, Value>;
 
 #[derive(Debug, Error)]
 pub enum AppError {

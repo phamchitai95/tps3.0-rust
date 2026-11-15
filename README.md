@@ -18,6 +18,8 @@ crates/tps-types      # AppError, Ctx, Row
 crates/tps-logic      # công thức thuần (fee, TKB, VietQR…)
 crates/tps-db         # pool + config (%APPDATA%/TC59 hoặc ~/.local/share/TC59)
 crates/tps-migrate    # migrate_version = 27
+crates/tps-auth       # scrypt + Role/perms + login
+crates/tps-catalog    # mon/gv/hs/lop/nv list+get (đọc)
 crates/tps-api        # Api::call registry
 src-tauri/            # app desktop TPS 3.0
 ```
@@ -28,12 +30,15 @@ src-tauri/            # app desktop TPS 3.0
 # Postgres local user tps / pass tps_dev (đã tạo trên Cloud agent)
 ./scripts/init_dev_db.sh          # nạp schema → qlth_test
 
-cargo test -p tps-logic           # unit logic (không cần DB)
-QLTH_DATABASE=qlth_test cargo test -p tps-db
-cargo test -p tps-api
+cargo test -p tps-logic -p tps-auth   # unit (không / ít DB)
+QLTH_DATABASE=qlth_test cargo test -p tps-api   # login + catalog trên qlth_test
+# seed: admin / admin
 
 npm install
 npm run tauri dev                 # cần WebKitGTK trên Linux
+```
+
+RPC đã có (S1): `app.init|ping|version`, `auth.*`, `monhoc.list`, `giaovien.list`, `hocsinh.list|get`, `lophoc.list|get`, `nhanvien.list`, `chucvu.list`, `caidat.get`.
 ```
 
 Config mẫu:

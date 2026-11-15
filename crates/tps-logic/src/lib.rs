@@ -5,6 +5,23 @@ use regex::Regex;
 use serde_json::{Map, Value};
 use std::sync::OnceLock;
 
+const VN_LOWER: &str = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ";
+const VN_ASCII: &str = "aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd";
+
+/// Bỏ dấu + chữ thường + gọn khoảng trắng (giống SQL `tc59_fold` / Dart `foldVi`).
+pub fn fold_vi(s: &str) -> String {
+    let mut b = String::new();
+    for ch in s.to_lowercase().chars() {
+        if let Some(i) = VN_LOWER.chars().position(|c| c == ch) {
+            b.push(VN_ASCII.chars().nth(i).unwrap_or(ch));
+        } else {
+            b.push(ch);
+        }
+    }
+    let re = Regex::new(r"\s+").unwrap();
+    re.replace_all(b.trim(), " ").to_string()
+}
+
 /// Month key as stored historically: "MM-YYYY" (e.g. "03-2018").
 pub fn month_key(date_str: &str) -> String {
     let d = &date_str[..10.min(date_str.len())];

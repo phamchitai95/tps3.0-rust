@@ -30,4 +30,7 @@ INSERT INTO app_meta (key, value) VALUES ('migrate_version', '27')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 SQL
 
-echo "== OK: $DB ready (migrate_version=27)"
+echo "== Seed fixture"
+psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -v ON_ERROR_STOP=1 -f "$ROOT/scripts/seed_dev.sql"
+
+echo "== OK: $DB ready (migrate_version=27, admin/admin)"

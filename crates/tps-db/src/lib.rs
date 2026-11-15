@@ -1,12 +1,14 @@
 //! Database connection + config for TPS 3.0.
 //! Config path mirrors tps59: `%APPDATA%/TC59/config.json` or `TPS_DATA_DIR` / `QLTH_CONFIG`.
 
-use deadpool_postgres::{Config as PoolConfig, Pool, Runtime};
+use deadpool_postgres::{Config as PoolConfig, Object, Pool, Runtime};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Map, Value};
 use std::env;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-use tokio_postgres::NoTls;
+use tokio_postgres::types::Type;
+use tokio_postgres::{NoTls, Row as PgRow};
 
 pub const DEFAULT_TIMEZONE: &str = "Asia/Ho_Chi_Minh";
 
@@ -182,6 +184,102 @@ pub async fn next_id(
         )
         .await?;
     Ok(next)
+}
+
+/// Convert a Postgres row to a JSON object (Dart/Node-shaped).
+pub fn row_to_json(row: &PgRow) -> Map<String, Value> {
+    let mut m = Map::new();
+    for (i, col) in row.columns().iter().enumerate() {
+        let name = col.name().to_string();
+        let v = pg_to_json(row, i, col.type_());
+        m.insert(name, v);
+    }
+    m
+}
+
+fn pg_to_json(row: &PgRow, i: usize, ty: &Type) -> Value {
+    match *ty {
+        Type::BOOL => json_opt(row.try_get::<_, Option<bool>>(i).ok().flatten()),
+        Type::INT2 => json_opt(row.try_get::<_, Option<i16>>(i).ok().flatten()),
+        Type::INT4 => json_opt(row.try_get::<_, Option<i32>>(i).ok().flatten()),
+        Type::INT8 => json_opt(row.try_get::<_, Option<i64>>(i).ok().flatten()),
+        Type::FLOAT4 => json_opt(row.try_get::<_, Option<f32>>(i).ok().flatten()),
+        Type::FLOAT8 => json_opt(row.try_get::<_, Option<f64>>(i).ok().flatten()),
+        Type::TEXT | Type::VARCHAR | Type::BPCHAR | Type::NAME | Type::UNKNOWN => {
+            json_opt(row.try_get::<_, Option<String>>(i).ok().flatten())
+        }
+        Type::DATE => match row.try_get::<_, Option<chrono::NaiveDate>>(i) {
+            Ok(Some(d)) => json!(d.format("%Y-%m-%d").to_string()),
+            _ => Value::Null,
+        },
+        Type::TIMESTAMP => match row.try_get::<_, Option<chrono::NaiveDateTime>>(i) {
+            Ok(Some(t)) => json!(t.format("%Y-%m-%d %H:%M:%S").to_string()),
+            _ => Value::Null,
+        },
+        Type::TIMESTAMPTZ => match row.try_get::<_, Option<chrono::DateTime<chrono::Utc>>>(i) {
+            Ok(Some(t)) => json!(t.naive_local().format("%Y-%m-%d %H:%M:%S").to_string()),
+            _ => Value::Null,
+        },
+        _ => {
+            // NUMERIC and others: try string then i64/f64
+            if let Ok(Some(s)) = row.try_get::<_, Option<String>>(i) {
+                if let Ok(n) = s.parse::<i64>() {
+                    return json!(n);
+                }
+                if let Ok(n) = s.parse::<f64>() {
+                    return json!(n);
+                }
+                return json!(s);
+            }
+            if let Ok(v) = row.try_get::<_, Option<i64>>(i) {
+                return json_opt(v);
+            }
+            if let Ok(v) = row.try_get::<_, Option<f64>>(i) {
+                return json_opt(v);
+            }
+            Value::Null
+        }
+    }
+}
+
+fn json_opt<T: serde::Serialize>(v: Option<T>) -> Value {
+    match v {
+        Some(x) => json!(x),
+        None => Value::Null,
+    }
+}
+
+pub async fn query_json(
+    client: &Object,
+    sql: &str,
+    params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
+) -> Result<Vec<Map<String, Value>>, DbError> {
+    let rows = client.query(sql, params).await?;
+    Ok(rows.iter().map(row_to_json).collect())
+}
+
+pub async fn query_one_json(
+    client: &Object,
+    sql: &str,
+    params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
+) -> Result<Option<Map<String, Value>>, DbError> {
+    let row = client.query_opt(sql, params).await?;
+    Ok(row.map(|r| row_to_json(&r)))
+}
+
+/// Dev helper: config pointing at local qlth_test.
+pub fn dev_test_config() -> DbConfig {
+    DbConfig {
+        host: env::var("PGHOST").unwrap_or_else(|_| "127.0.0.1".into()),
+        port: env::var("PGPORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(5432),
+        user: env::var("PGUSER").unwrap_or_else(|_| "tps".into()),
+        password: env::var("PGPASSWORD").unwrap_or_else(|_| "tps_dev".into()),
+        database: env::var("QLTH_DATABASE").unwrap_or_else(|_| "qlth_test".into()),
+        time_zone: DEFAULT_TIMEZONE.into(),
+    }
 }
 
 #[cfg(test)]

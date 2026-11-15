@@ -5,10 +5,19 @@ members = [
   "crates/tps-logic",
   "crates/tps-db",
   "crates/tps-migrate",
+  "crates/tps-auth",
+  "crates/tps-catalog",
   "crates/tps-api",
   "src-tauri",
 ]
-default-members = ["crates/tps-logic", "crates/tps-db", "crates/tps-migrate", "crates/tps-api"]
+default-members = [
+  "crates/tps-logic",
+  "crates/tps-db",
+  "crates/tps-migrate",
+  "crates/tps-auth",
+  "crates/tps-catalog",
+  "crates/tps-api",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -19,6 +28,9 @@ authors = ["Tài"]
 tps-types = { path = "crates/tps-types" }
 tps-logic = { path = "crates/tps-logic" }
 tps-db = { path = "crates/tps-db" }
+tps-migrate = { path = "crates/tps-migrate" }
+tps-auth = { path = "crates/tps-auth" }
+tps-catalog = { path = "crates/tps-catalog" }
 tps-api = { path = "crates/tps-api" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
