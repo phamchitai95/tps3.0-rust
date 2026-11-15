@@ -65,6 +65,19 @@ impl Api {
         api.register("nhanvien.list", Arc::new(NhanvienList));
         api.register("chucvu.list", Arc::new(ChucvuList));
         api.register("caidat.get", Arc::new(CaidatGet));
+        // tuition / finance (S2)
+        api.register("kyhp.sync", Arc::new(KyhpSync));
+        api.register("kyhp.list", Arc::new(KyhpList));
+        api.register("hocphi.collect", Arc::new(HocphiCollect));
+        api.register("congno.list", Arc::new(CongnoList));
+        api.register("quy.get", Arc::new(QuyGet));
+        // pay / VietQR / Pay2S (S3)
+        api.register("ck.bankInfo", Arc::new(CkBankInfo));
+        api.register("ck.getSettings", Arc::new(CkGetSettings));
+        api.register("ck.saveSettings", Arc::new(CkSaveSettings));
+        api.register("ck.qrPreview", Arc::new(CkQrPreview));
+        api.register("ck.processPay2s", Arc::new(CkProcessPay2s));
+        api.register("ck.gdList", Arc::new(CkGdList));
         api
     }
 
@@ -371,6 +384,118 @@ impl Handler for CaidatGet {
     async fn call(&self, state: &AppState, _args: Args) -> HandlerResult {
         let c = client(state).await?;
         tps_catalog::caidat_get(&c).await
+    }
+}
+
+struct KyhpSync;
+#[async_trait]
+impl Handler for KyhpSync {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let hs = args
+            .get("hocsinhid")
+            .and_then(|v| v.as_i64())
+            .map(|n| n as i32);
+        let n = tps_tuition::ensure_periods(&c, hs, None).await?;
+        Ok(json!({ "created": n }))
+    }
+}
+
+struct KyhpList;
+#[async_trait]
+impl Handler for KyhpList {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        tps_tuition::kyhp_list(&c, &args).await
+    }
+}
+
+struct HocphiCollect;
+#[async_trait]
+impl Handler for HocphiCollect {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let mut c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_tuition::hocphi_collect(&mut c, &ctx, &args).await
+    }
+}
+
+struct CongnoList;
+#[async_trait]
+impl Handler for CongnoList {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_tuition::congno_list(&c, &ctx, &args).await
+    }
+}
+
+struct QuyGet;
+#[async_trait]
+impl Handler for QuyGet {
+    async fn call(&self, state: &AppState, _args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        tps_tuition::quy_get(&c).await
+    }
+}
+
+struct CkBankInfo;
+#[async_trait]
+impl Handler for CkBankInfo {
+    async fn call(&self, state: &AppState, _args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_pay::ck_bank_info(&c, &ctx).await
+    }
+}
+
+struct CkGetSettings;
+#[async_trait]
+impl Handler for CkGetSettings {
+    async fn call(&self, state: &AppState, _args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_pay::ck_get_settings(&c, &ctx).await
+    }
+}
+
+struct CkSaveSettings;
+#[async_trait]
+impl Handler for CkSaveSettings {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_pay::ck_save_settings(&c, &ctx, &args).await
+    }
+}
+
+struct CkQrPreview;
+#[async_trait]
+impl Handler for CkQrPreview {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_pay::ck_qr_preview(&c, &ctx, &args).await
+    }
+}
+
+struct CkProcessPay2s;
+#[async_trait]
+impl Handler for CkProcessPay2s {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_pay::ck_process_pay2s(&c, &ctx, &args).await
+    }
+}
+
+struct CkGdList;
+#[async_trait]
+impl Handler for CkGdList {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_pay::ck_gd_list(&c, &ctx, &args).await
     }
 }
 

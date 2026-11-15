@@ -4447,6 +4447,8 @@ dependencies = [
  "tps-db",
  "tps-logic",
  "tps-migrate",
+ "tps-pay",
+ "tps-tuition",
  "tps-types",
 ]
 
@@ -4506,6 +4508,38 @@ dependencies = [
  "tokio",
  "tokio-postgres",
  "tps-db",
+]
+
+[[package]]
+name = "tps-pay"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "deadpool-postgres",
+ "regex",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-postgres",
+ "tps-auth",
+ "tps-db",
+ "tps-logic",
+ "tps-types",
+]
+
+[[package]]
+name = "tps-tuition"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "deadpool-postgres",
+ "serde_json",
+ "tokio",
+ "tokio-postgres",
+ "tps-auth",
+ "tps-db",
+ "tps-logic",
+ "tps-types",
 ]
 
 [[package]]

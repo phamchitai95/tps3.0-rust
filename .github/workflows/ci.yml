@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: tps
+          POSTGRES_PASSWORD: tps_dev
+          POSTGRES_DB: qlth_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tps -d qlth_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGUSER: tps
+      PGPASSWORD: tps_dev
+      QLTH_DATABASE: qlth_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Init fixture DB
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client
+          ./scripts/init_dev_db.sh
+      - name: Cargo test
+        run: cargo test --workspace --exclude tps -- --test-threads=1
+      - name: Frontend typecheck / build
+        run: |
+          npm ci
+          npm run build
+
+  release-linux:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install Linux Tauri deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+      - name: Build Tauri
+        run: npm run tauri build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tps3-linux
+          path: |
+            src-tauri/target/release/bundle/**/*
+            src-tauri/target/release/tps

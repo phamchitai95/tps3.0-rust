@@ -1,59 +1,178 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Literata:opsz,wght@7..72,600;7..72,700&display=swap");
+
 :root {
   color-scheme: light;
-  --ink: #1a1a1a;
-  --muted: #5c5c5c;
-  --bg: #f3efe6;
-  --accent: #0b5fff;
-  font-family: "Segoe UI", "Be Vietnam Pro", system-ui, sans-serif;
+  --ink: #102018;
+  --muted: #4a5c52;
+  --paper: #e8f2ec;
+  --panel: rgba(255, 255, 255, 0.78);
+  --line: #c5d7cc;
+  --accent: #0f6a4a;
+  --accent-2: #0a3a2a;
+  --danger: #a11d2f;
+  --ok: #0f6a4a;
+  font-family: "Be Vietnam Pro", sans-serif;
 }
 
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, #dfe9ff 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #ffe8d6 0%, transparent 50%),
-    var(--bg);
   color: var(--ink);
+  background:
+    linear-gradient(160deg, rgba(15, 106, 74, 0.12), transparent 42%),
+    radial-gradient(900px 480px at 100% -10%, #cfe8ff 0%, transparent 55%),
+    linear-gradient(180deg, #d9ebe2 0%, var(--paper) 45%, #f4faf6 100%);
 }
 
-.wrap {
-  max-width: 40rem;
+#app { min-height: 100vh; }
+
+.shell {
+  max-width: 56rem;
   margin: 0 auto;
-  padding: 4rem 1.5rem;
+  padding: 2rem 1.25rem 3rem;
 }
 
 .brand {
-  font-size: 2.5rem;
+  font-family: Literata, Georgia, serif;
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  margin: 0 0 0.25rem;
+  margin: 0;
+  line-height: 1.05;
 }
 
-h1 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 0.75rem;
+.tagline {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  max-width: 28rem;
 }
 
-.sub { color: var(--muted); line-height: 1.5; }
+.panel {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-width: 10rem;
+  flex: 1;
+}
+
+input, select {
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.55rem 0.7rem;
+}
 
 button {
-  margin-top: 1.25rem;
   border: 0;
   background: var(--accent);
   color: #fff;
-  padding: 0.65rem 1.1rem;
+  padding: 0.6rem 1rem;
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
 }
 
-pre {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #fff;
-  border: 1px solid #ddd;
+button.ghost {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0;
+}
+
+.nav button.active {
+  background: #0a3a2a;
+}
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .grid.two { grid-template-columns: 1fr 1fr; }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 22rem;
   overflow: auto;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.list li {
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.list li:hover, .list li.sel {
+  background: #eef7f2;
+}
+
+.meta {
+  color: var(--muted);
   font-size: 0.85rem;
+}
+
+.err {
+  color: var(--danger);
+  margin-top: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.ok {
+  color: var(--ok);
+  margin-top: 0.75rem;
+}
+
+pre.out {
+  margin: 0.75rem 0 0;
+  padding: 0.85rem;
+  background: #0f1c16;
+  color: #d7ffe9;
+  overflow: auto;
+  font-size: 0.8rem;
+  max-height: 16rem;
+}
+
+.userbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.75rem;
 }

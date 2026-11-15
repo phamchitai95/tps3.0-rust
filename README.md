@@ -20,6 +20,8 @@ crates/tps-db         # pool + config (%APPDATA%/TC59 hoặc ~/.local/share/TC59
 crates/tps-migrate    # migrate_version = 27
 crates/tps-auth       # scrypt + Role/perms + login
 crates/tps-catalog    # mon/gv/hs/lop/nv list+get (đọc)
+crates/tps-tuition    # kỳ học phí + thu TM/CK + công nợ (S2)
+crates/tps-pay        # VietQR + Pay2S ingest (S3)
 crates/tps-api        # Api::call registry
 src-tauri/            # app desktop TPS 3.0
 ```
@@ -37,9 +39,9 @@ npm install
 npm run tauri dev                 # cần WebKitGTK trên Linux
 ```
 
-RPC đã có (S1): `app.init|ping|version`, `auth.*`, `monhoc.list`, `giaovien.list`, `hocsinh.list|get`, `lophoc.list|get`, `nhanvien.list`, `chucvu.list`, `caidat.get`.
+RPC: S1 auth/catalog · S2 `kyhp.*` `hocphi.collect` `congno.list` `quy.get` · S3 `ck.bankInfo|getSettings|saveSettings|qrPreview|processPay2s|gdList`.
 
-Config mẫu:
+Config mẫu (Cloud/dev only — không dùng cho prod):
 
 ```json
 {
@@ -66,5 +68,9 @@ Xem `private_data/README.md`.
 
 1. **S0** done — workspace + Tauri + DB + logic tests  
 2. **S1** done — auth + catalog reads  
-3. **S2** — tuition / finance  
-4. S3 Pay2S → S4 payroll → S5 web API → S6 OTA + print → S7 so sánh backup thật
+3. **S2** done — tuition / finance (TM collect)  
+4. **S3** done (subset) — CK settings + VietQR preview + Pay2S ingest  
+5. UI shell + CI/release docs done  
+6. S4 payroll → S5 web API → S6 OTA + print → S7 so sánh backup thật  
+
+Chi tiết đóng gói: `docs/RELEASE.md`.
