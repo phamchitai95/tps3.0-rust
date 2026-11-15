@@ -1,0 +1,14 @@
+[package]
+name = "tps-db"
+version.workspace = true
+edition.workspace = true
+description = "Postgres pool, config, next_id — port of core/lib/src/db.dart"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tokio-postgres = { workspace = true }
+deadpool-postgres = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }

@@ -1,0 +1,13 @@
+[package]
+name = "tps-api"
+version.workspace = true
+edition.workspace = true
+description = "RPC Api::call registry — parity with tps59 handlers map"
+
+[dependencies]
+tps-types = { workspace = true }
+tps-logic = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+async-trait = "0.1"
+tokio = { workspace = true }

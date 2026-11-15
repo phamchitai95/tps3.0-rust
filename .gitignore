@@ -1,0 +1,35 @@
+# Logs / deps
+logs
+*.log
+node_modules
+dist
+dist-ssr
+*.local
+
+# Rust
+target/
+**/*.rs.bk
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# Tauri
+src-tauri/target
+
+# Private real DB dumps — never commit
+private_data/*
+!private_data/README.md
+
+# Local config / secrets
+.env
+.env.*
+fixtures/local/
+*.pem
+*.key
+keys/
+
+# OS
+Thumbs.db

@@ -1,0 +1,13 @@
+[package]
+name = "tps-migrate"
+version.workspace = true
+edition.workspace = true
+description = "Schema migrate runner — target parity with tps59 migrateVersion"
+
+[dependencies]
+tokio-postgres = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tps-db = { workspace = true }
+tokio = { workspace = true }

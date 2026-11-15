@@ -1,0 +1,12 @@
+[package]
+name = "tps-logic"
+version.workspace = true
+edition.workspace = true
+description = "Pure business rules (no DB) — port of core/lib/src/logic.dart + VietQR helpers"
+
+[dependencies]
+regex = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

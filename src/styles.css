@@ -1,0 +1,59 @@
+:root {
+  color-scheme: light;
+  --ink: #1a1a1a;
+  --muted: #5c5c5c;
+  --bg: #f3efe6;
+  --accent: #0b5fff;
+  font-family: "Segoe UI", "Be Vietnam Pro", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #dfe9ff 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #ffe8d6 0%, transparent 50%),
+    var(--bg);
+  color: var(--ink);
+}
+
+.wrap {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+.brand {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.25rem;
+}
+
+h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+.sub { color: var(--muted); line-height: 1.5; }
+
+button {
+  margin-top: 1.25rem;
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.65rem 1.1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+pre {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  overflow: auto;
+  font-size: 0.85rem;
+}

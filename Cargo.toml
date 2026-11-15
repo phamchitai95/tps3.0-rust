@@ -1,0 +1,37 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/tps-types",
+  "crates/tps-logic",
+  "crates/tps-db",
+  "crates/tps-migrate",
+  "crates/tps-api",
+  "src-tauri",
+]
+default-members = ["crates/tps-logic", "crates/tps-db", "crates/tps-migrate", "crates/tps-api"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Tài"]
+
+[workspace.dependencies]
+tps-types = { path = "crates/tps-types" }
+tps-logic = { path = "crates/tps-logic" }
+tps-db = { path = "crates/tps-db" }
+tps-api = { path = "crates/tps-api" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio-postgres = { version = "0.7", features = ["with-serde_json-1", "with-chrono-0_4"] }
+deadpool-postgres = "0.14"
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
