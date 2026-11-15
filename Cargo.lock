@@ -4537,6 +4537,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tokio-postgres",
  "tps-auth",
  "tps-db",
  "tps-logic",

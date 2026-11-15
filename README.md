@@ -73,6 +73,7 @@ Xem `private_data/README.md`.
 4. **S3** done (subset) — CK settings + VietQR preview + Pay2S ingest  
 5. UI shell + CI/release docs done  
 6. **S4** done (subset) — lương preview / `bl.ds` / `bl.gv` / `phieuchi.list`  
+7. **S4b** done (subset) — `bl.chot` / khấu trừ / `bl.ck.*` (CSV)  
 7. S4b chốt lương đầy đủ → S5 web → S6 OTA → S7 dump thật  
 
 Chi tiết đóng gói: `docs/RELEASE.md`.

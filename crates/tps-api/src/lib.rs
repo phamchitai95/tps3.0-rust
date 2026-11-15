@@ -78,12 +78,20 @@ impl Api {
         api.register("ck.qrPreview", Arc::new(CkQrPreview));
         api.register("ck.processPay2s", Arc::new(CkProcessPay2s));
         api.register("ck.gdList", Arc::new(CkGdList));
-        // payroll (S4 subset)
+        // payroll (S4 + S4b)
         api.register("luong.preview", Arc::new(LuongPreview));
         api.register("luong.lichsu", Arc::new(LuongLichsu));
         api.register("bl.ds", Arc::new(BlDs));
         api.register("bl.gv", Arc::new(BlGv));
         api.register("phieuchi.list", Arc::new(PhieuchiList));
+        api.register("bl.khautru", Arc::new(BlKhautru));
+        api.register("bl.khautruXoa", Arc::new(BlKhautruXoa));
+        api.register("bl.chot", Arc::new(BlChot));
+        api.register("bl.mo", Arc::new(BlMo));
+        api.register("bl.ck.ds", Arc::new(BlCkDs));
+        api.register("bl.ck.xuat", Arc::new(BlCkXuat));
+        api.register("bl.ck.tai", Arc::new(BlCkTai));
+        api.register("bl.ck.huy", Arc::new(BlCkHuy));
         api
     }
 
@@ -552,6 +560,86 @@ impl Handler for PhieuchiList {
         let c = client(state).await?;
         let ctx = state.ctx.lock().await;
         tps_payroll::phieuchi_list(&c, &ctx, &args).await
+    }
+}
+
+struct BlKhautru;
+#[async_trait]
+impl Handler for BlKhautru {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let mut c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_khautru(&mut c, &ctx, &args).await
+    }
+}
+
+struct BlKhautruXoa;
+#[async_trait]
+impl Handler for BlKhautruXoa {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let mut c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_khautru_xoa(&mut c, &ctx, &args).await
+    }
+}
+
+struct BlChot;
+#[async_trait]
+impl Handler for BlChot {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let mut c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_chot(&mut c, &ctx, &args).await
+    }
+}
+
+struct BlMo;
+#[async_trait]
+impl Handler for BlMo {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let mut c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_mo(&mut c, &ctx, &args).await
+    }
+}
+
+struct BlCkDs;
+#[async_trait]
+impl Handler for BlCkDs {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_ck_ds(&c, &ctx, &args).await
+    }
+}
+
+struct BlCkXuat;
+#[async_trait]
+impl Handler for BlCkXuat {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let mut c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_ck_xuat(&mut c, &ctx, &args).await
+    }
+}
+
+struct BlCkTai;
+#[async_trait]
+impl Handler for BlCkTai {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_ck_tai(&c, &ctx, &args).await
+    }
+}
+
+struct BlCkHuy;
+#[async_trait]
+impl Handler for BlCkHuy {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_ck_huy(&c, &ctx, &args).await
     }
 }
 

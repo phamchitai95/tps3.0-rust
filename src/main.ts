@@ -303,24 +303,121 @@ async function renderLuong(main: HTMLDivElement) {
   const vn = new Date(now.getTime() + 7 * 3600 * 1000);
   const thangDefault = `${String(vn.getUTCMonth() + 1).padStart(2, "0")}-${vn.getUTCFullYear()}`;
   main.innerHTML = `
-    <h2 style="margin:0 0 .75rem;font:600 1.1rem Literata,serif">Lương giáo viên (S4 subset)</h2>
+    <h2 style="margin:0 0 .75rem;font:600 1.1rem Literata,serif">Lương giáo viên (S4b)</h2>
+    <p class="meta">Danh sách · chi tiết · khấu trừ · chốt · chuyển khoản (CSV).</p>
     <div class="row">
       <label>Tháng (MM-YYYY)
         <input id="thangluong" value="${thangDefault}" />
       </label>
       <button type="button" id="loadluong">Xem bảng</button>
+      <button type="button" id="loadck">DS chuyển khoản</button>
+    </div>
+    <div class="row" style="margin-top:.75rem">
+      <label>giaovienid
+        <input id="gvid" type="number" placeholder="id GV" />
+      </label>
+      <button type="button" id="loadgv">Chi tiết GV</button>
+      <button type="button" id="chotgv">Chốt</button>
+      <button type="button" id="mogv">Mở lại</button>
+    </div>
+    <div class="row" style="margin-top:.75rem">
+      <label>Khấu trừ
+        <select id="ktloai">
+          <option value="tamung">Tạm ứng</option>
+          <option value="khac">Khác</option>
+        </select>
+      </label>
+      <label>Số tiền
+        <input id="kttien" type="number" value="50000" />
+      </label>
+      <label>Lý do
+        <input id="ktlydo" value="Ứng giữa tháng" />
+      </label>
+      <button type="button" id="addkt">Thêm KT</button>
     </div>
     <pre class="out" id="luongout" style="margin-top:1rem"></pre>
   `;
+  const out = () => document.querySelector("#luongout")!;
+  const thangOf = () => (document.querySelector("#thangluong") as HTMLInputElement).value.trim();
+  const gvidOf = () => Number((document.querySelector("#gvid") as HTMLInputElement).value || 0);
   const load = () => {
-    const thang = (document.querySelector("#thangluong") as HTMLInputElement).value.trim();
+    const thang = thangOf();
     void withBusy(async () => {
       const ds = await api("bl.ds", { thang });
-      document.querySelector("#luongout")!.textContent = JSON.stringify(ds, null, 2);
+      out().textContent = JSON.stringify(ds, null, 2);
       setStatus(`Đã tải lương tháng ${thang}.`);
     });
   };
   document.querySelector("#loadluong")!.addEventListener("click", load);
+  document.querySelector("#loadck")!.addEventListener("click", () => {
+    void withBusy(async () => {
+      const r = await api("bl.ck.ds", { thang: thangOf() });
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus("Đã tải DS chuyển khoản.");
+    });
+  });
+  document.querySelector("#loadgv")!.addEventListener("click", () => {
+    const gvid = gvidOf();
+    if (!gvid) {
+      setStatus("", "Nhập giaovienid.");
+      void render();
+      return;
+    }
+    void withBusy(async () => {
+      const r = await api("bl.gv", { thang: thangOf(), giaovienid: gvid });
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus(`Chi tiết GV #${gvid}.`);
+    });
+  });
+  document.querySelector("#chotgv")!.addEventListener("click", () => {
+    const gvid = gvidOf();
+    if (!gvid) {
+      setStatus("", "Nhập giaovienid.");
+      void render();
+      return;
+    }
+    void withBusy(async () => {
+      const r = await api("bl.chot", { thang: thangOf(), giaovienid: gvid });
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus(`Đã chốt GV #${gvid}.`);
+    });
+  });
+  document.querySelector("#mogv")!.addEventListener("click", () => {
+    const gvid = gvidOf();
+    if (!gvid) {
+      setStatus("", "Nhập giaovienid.");
+      void render();
+      return;
+    }
+    void withBusy(async () => {
+      const r = await api("bl.mo", {
+        thang: thangOf(),
+        giaovienid: gvid,
+        lydo: "Mở lại từ UI TPS 3.0",
+      });
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus(`Đã mở lại GV #${gvid}.`);
+    });
+  });
+  document.querySelector("#addkt")!.addEventListener("click", () => {
+    const gvid = gvidOf();
+    if (!gvid) {
+      setStatus("", "Nhập giaovienid.");
+      void render();
+      return;
+    }
+    void withBusy(async () => {
+      const r = await api("bl.khautru", {
+        thang: thangOf(),
+        giaovienid: gvid,
+        loai: (document.querySelector("#ktloai") as HTMLSelectElement).value,
+        sotien: Number((document.querySelector("#kttien") as HTMLInputElement).value || 0),
+        lydo: (document.querySelector("#ktlydo") as HTMLInputElement).value.trim(),
+      });
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus("Đã thêm khấu trừ.");
+    });
+  });
   load();
 }
 

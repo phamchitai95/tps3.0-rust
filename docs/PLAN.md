@@ -18,4 +18,5 @@ Baseline tham chiếu: tps59 build **276** / migrate **27**.
 4. **S3** done (subset) — CK settings, VietQR preview, Pay2S ingest (`ck.*`)  
 5. UI shell + CI/release docs done  
 6. **S4** done (subset) — `luong.preview|lichsu`, `bl.ds|gv`, `phieuchi.list` (`tps-payroll`)  
-7. S4b `bl.chot` / khấu trừ / chuyển lương → S5 web API → S6 OTA + print → S7 so sánh backup thật
+7. **S4b** done (subset) — `bl.khautru|khautruXoa|chot|mo`, `bl.ck.ds|xuat|tai|huy` (CSV; xlsx MB sau)  
+8. S5 web API → S6 OTA + print → S7 so sánh backup thật
