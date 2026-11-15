@@ -10,6 +10,8 @@ tps-logic = { workspace = true }
 tps-db = { workspace = true }
 tps-auth = { workspace = true }
 tps-catalog = { workspace = true }
+tps-tuition = { workspace = true }
+tps-pay = { workspace = true }
 tps-migrate = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

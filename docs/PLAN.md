@@ -14,5 +14,7 @@ Baseline tham chiếu: tps59 build **276** / migrate **27**.
 
 1. **S0** done — workspace + Tauri + DB + logic tests  
 2. **S1** done — auth (scrypt) + catalog reads  
-3. **S2** next — tuition / finance (`kyhocphi`, `collectItems`, nợ)  
-4. S3 Pay2S → S4 payroll → S5 web API → S6 OTA + print → S7 so sánh backup thật
+3. **S2** done — tuition / finance (`kyhp.*`, `hocphi.collect`, `congno.list`, `quy.get`)  
+4. **S3** done (subset) — CK settings, VietQR preview, Pay2S ingest (`ck.*`)  
+5. UI shell + CI/release docs done  
+6. S4 payroll → S5 web API → S6 OTA + print → S7 so sánh backup thật
