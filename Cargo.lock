@@ -4448,6 +4448,7 @@ dependencies = [
  "tps-logic",
  "tps-migrate",
  "tps-pay",
+ "tps-payroll",
  "tps-tuition",
  "tps-types",
 ]
@@ -4521,6 +4522,21 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-postgres",
+ "tps-auth",
+ "tps-db",
+ "tps-logic",
+ "tps-types",
+]
+
+[[package]]
+name = "tps-payroll"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "deadpool-postgres",
+ "serde",
+ "serde_json",
+ "tokio",
  "tps-auth",
  "tps-db",
  "tps-logic",

@@ -12,6 +12,7 @@ tps-auth = { workspace = true }
 tps-catalog = { workspace = true }
 tps-tuition = { workspace = true }
 tps-pay = { workspace = true }
+tps-payroll = { workspace = true }
 tps-migrate = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

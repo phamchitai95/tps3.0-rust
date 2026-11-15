@@ -22,6 +22,7 @@ crates/tps-auth       # scrypt + Role/perms + login
 crates/tps-catalog    # mon/gv/hs/lop/nv list+get (đọc)
 crates/tps-tuition    # kỳ học phí + thu TM/CK + công nợ (S2)
 crates/tps-pay        # VietQR + Pay2S ingest (S3)
+crates/tps-payroll    # lương GV preview + bl.ds/gv (S4 subset)
 crates/tps-api        # Api::call registry
 src-tauri/            # app desktop TPS 3.0
 ```
@@ -71,6 +72,7 @@ Xem `private_data/README.md`.
 3. **S2** done — tuition / finance (TM collect)  
 4. **S3** done (subset) — CK settings + VietQR preview + Pay2S ingest  
 5. UI shell + CI/release docs done  
-6. S4 payroll → S5 web API → S6 OTA + print → S7 so sánh backup thật  
+6. **S4** done (subset) — lương preview / `bl.ds` / `bl.gv` / `phieuchi.list`  
+7. S4b chốt lương đầy đủ → S5 web → S6 OTA → S7 dump thật  
 
 Chi tiết đóng gói: `docs/RELEASE.md`.
