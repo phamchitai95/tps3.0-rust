@@ -11,7 +11,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 type Me = { hotennv?: string; tendangnhap?: string; chucvu?: number } | null;
 
 let me: Me = null;
-let tab: "hs" | "congno" | "ck" = "hs";
+let tab: "hs" | "congno" | "ck" | "luong" = "hs";
 let selectedHs: number | null = null;
 let lastMsg = "";
 let lastErr = "";
@@ -130,6 +130,7 @@ async function shellView() {
         <button type="button" data-tab="hs" class="${tab === "hs" ? "active" : ""}">Học viên</button>
         <button type="button" data-tab="congno" class="${tab === "congno" ? "active" : ""}">Công nợ / Thu TM</button>
         <button type="button" data-tab="ck" class="${tab === "ck" ? "active" : ""}">Chuyển khoản</button>
+        <button type="button" data-tab="luong" class="${tab === "luong" ? "active" : ""}">Lương GV</button>
       </div>
       <div class="panel" id="main"></div>
       ${lastErr ? `<p class="err">${escapeHtml(lastErr)}</p>` : ""}
@@ -146,7 +147,8 @@ async function shellView() {
   const main = document.querySelector<HTMLDivElement>("#main")!;
   if (tab === "hs") await renderHs(main);
   else if (tab === "congno") await renderCongno(main);
-  else await renderCk(main);
+  else if (tab === "ck") await renderCk(main);
+  else await renderLuong(main);
 }
 
 async function renderHs(main: HTMLDivElement) {
@@ -294,6 +296,32 @@ async function renderCk(main: HTMLDivElement) {
   } catch (e) {
     main.innerHTML = `<p class="err">${escapeHtml(String(e))}</p>`;
   }
+}
+
+async function renderLuong(main: HTMLDivElement) {
+  const now = new Date();
+  const vn = new Date(now.getTime() + 7 * 3600 * 1000);
+  const thangDefault = `${String(vn.getUTCMonth() + 1).padStart(2, "0")}-${vn.getUTCFullYear()}`;
+  main.innerHTML = `
+    <h2 style="margin:0 0 .75rem;font:600 1.1rem Literata,serif">Lương giáo viên (S4 subset)</h2>
+    <div class="row">
+      <label>Tháng (MM-YYYY)
+        <input id="thangluong" value="${thangDefault}" />
+      </label>
+      <button type="button" id="loadluong">Xem bảng</button>
+    </div>
+    <pre class="out" id="luongout" style="margin-top:1rem"></pre>
+  `;
+  const load = () => {
+    const thang = (document.querySelector("#thangluong") as HTMLInputElement).value.trim();
+    void withBusy(async () => {
+      const ds = await api("bl.ds", { thang });
+      document.querySelector("#luongout")!.textContent = JSON.stringify(ds, null, 2);
+      setStatus(`Đã tải lương tháng ${thang}.`);
+    });
+  };
+  document.querySelector("#loadluong")!.addEventListener("click", load);
+  load();
 }
 
 async function render() {

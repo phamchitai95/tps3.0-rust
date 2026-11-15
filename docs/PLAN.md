@@ -17,4 +17,5 @@ Baseline tham chiếu: tps59 build **276** / migrate **27**.
 3. **S2** done — tuition / finance (`kyhp.*`, `hocphi.collect`, `congno.list`, `quy.get`)  
 4. **S3** done (subset) — CK settings, VietQR preview, Pay2S ingest (`ck.*`)  
 5. UI shell + CI/release docs done  
-6. S4 payroll → S5 web API → S6 OTA + print → S7 so sánh backup thật
+6. **S4** done (subset) — `luong.preview|lichsu`, `bl.ds|gv`, `phieuchi.list` (`tps-payroll`)  
+7. S4b `bl.chot` / khấu trừ / chuyển lương → S5 web API → S6 OTA + print → S7 so sánh backup thật

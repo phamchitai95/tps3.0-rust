@@ -78,6 +78,12 @@ impl Api {
         api.register("ck.qrPreview", Arc::new(CkQrPreview));
         api.register("ck.processPay2s", Arc::new(CkProcessPay2s));
         api.register("ck.gdList", Arc::new(CkGdList));
+        // payroll (S4 subset)
+        api.register("luong.preview", Arc::new(LuongPreview));
+        api.register("luong.lichsu", Arc::new(LuongLichsu));
+        api.register("bl.ds", Arc::new(BlDs));
+        api.register("bl.gv", Arc::new(BlGv));
+        api.register("phieuchi.list", Arc::new(PhieuchiList));
         api
     }
 
@@ -496,6 +502,56 @@ impl Handler for CkGdList {
         let c = client(state).await?;
         let ctx = state.ctx.lock().await;
         tps_pay::ck_gd_list(&c, &ctx, &args).await
+    }
+}
+
+struct LuongPreview;
+#[async_trait]
+impl Handler for LuongPreview {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::luong_preview(&c, &ctx, &args).await
+    }
+}
+
+struct LuongLichsu;
+#[async_trait]
+impl Handler for LuongLichsu {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::luong_lichsu(&c, &ctx, &args).await
+    }
+}
+
+struct BlDs;
+#[async_trait]
+impl Handler for BlDs {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_ds(&c, &ctx, &args).await
+    }
+}
+
+struct BlGv;
+#[async_trait]
+impl Handler for BlGv {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::bl_gv(&c, &ctx, &args).await
+    }
+}
+
+struct PhieuchiList;
+#[async_trait]
+impl Handler for PhieuchiList {
+    async fn call(&self, state: &AppState, args: Args) -> HandlerResult {
+        let c = client(state).await?;
+        let ctx = state.ctx.lock().await;
+        tps_payroll::phieuchi_list(&c, &ctx, &args).await
     }
 }
 
