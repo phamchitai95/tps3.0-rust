@@ -40,7 +40,7 @@ npm install
 npm run tauri dev                 # cần WebKitGTK trên Linux
 ```
 
-RPC: S1 auth/catalog · S2 `kyhp.*` `hocphi.collect` `congno.list` `quy.get` · S3 `ck.bankInfo|getSettings|saveSettings|qrPreview|processPay2s|gdList`.
+RPC: S1–S5 như trước · S6 `app.checkUpdate` · `hocphi.receipt`.
 
 Config mẫu (Cloud/dev only — không dùng cho prod):
 
@@ -75,6 +75,7 @@ Xem `private_data/README.md`.
 6. **S4** done (subset) — lương preview / `bl.ds` / `bl.gv` / `phieuchi.list`  
 7. **S4b** done (subset) — `bl.chot` / khấu trừ / `bl.ck.*` (CSV)  
 8. **S5** done (subset) — `tps-web` HTTP API (`POST /api/<cmd>`, Pay2S push)  
-9. S6 OTA + print → S7 dump thật  
+9. **S6** done (subset) — OTA check (`app.checkUpdate`) + biên lai text (`hocphi.receipt`)  
+10. S7 dump thật  
 
 Chi tiết đóng gói: `docs/RELEASE.md`.

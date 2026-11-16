@@ -19,6 +19,7 @@ serde_json = { workspace = true }
 async-trait = "0.1"
 tokio = { workspace = true }
 deadpool-postgres = { workspace = true }
+reqwest = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }

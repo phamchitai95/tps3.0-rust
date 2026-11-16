@@ -618,6 +618,185 @@ pub async fn congno_list(client: &Object, ctx: &Ctx, args: &Args) -> Result<Valu
     compute_debt(client, hs, upto).await
 }
 
+/// `hocphi.receipt` — biên lai data for print (S6 subset; phụ thu chi tiết port sau).
+pub async fn hocphi_receipt(client: &Object, ctx: &Ctx, args: &Args) -> Result<Value, AppError> {
+    need(ctx, role::CTV)?;
+    let ids: Vec<i32> = args
+        .get("ids")
+        .and_then(|v| v.as_array())
+        .map(|a| {
+            a.iter()
+                .filter_map(|x| {
+                    x.as_i64()
+                        .or_else(|| x.as_f64().map(|f| f as i64))
+                        .map(|n| n as i32)
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if ids.is_empty() {
+        return Err(AppError::msg("Thiếu ids phiếu thu."));
+    }
+    let rows = query_json(
+        client,
+        "SELECT p.lineid, p.thangdongtien, p.sotien::bigint AS sotien,
+                p.thoigiandong::text AS thoigiandong, p.ghichu, p.hinhthuc,
+                l.tenlop, g.hotengv, h.hotenhs, h.hocsinhid, h.mahocvien,
+                COALESCE(NULLIF(TRIM(n.hoten), ''), n.hotennv) AS hotennv,
+                k.makyhp, (k.sotien - k.dathu)::bigint AS conlai, p.lopid
+           FROM phieuthutien p
+           JOIN hocsinh h ON h.hocsinhid = p.hocsinhid
+           LEFT JOIN lophoc l ON l.lopid = p.lopid
+           LEFT JOIN giaovien g ON g.giaovienid = l.giaovienid
+           LEFT JOIN nhanvien n ON n.nhanvienid = p.nhanvienid
+           LEFT JOIN kyhocphi k ON k.kyid = p.kyid
+          WHERE p.lineid = ANY($1)
+          ORDER BY l.tenlop, p.thangdongtien, p.lineid",
+        &[&ids],
+    )
+    .await
+    .map_err(map_db)?;
+
+    let tt = query_one_json(
+        client,
+        "SELECT tentrungtam, sdt, diachi, website FROM thongtintt LIMIT 1",
+        &[],
+    )
+    .await
+    .map_err(map_db)?
+    .unwrap_or_default();
+    let ghichu_tt = query_one_json(
+        client,
+        "SELECT value FROM app_meta WHERE key = 'tt_ghichu'",
+        &[],
+    )
+    .await
+    .ok()
+    .flatten()
+    .and_then(|m| m.get("value").cloned())
+    .unwrap_or(json!(""));
+    let mut trungtam = tt;
+    trungtam.insert("ghichu".into(), ghichu_tt);
+
+    let luuy = query_one_json(
+        client,
+        "SELECT value FROM app_meta WHERE key = 'bienlai_luuy'",
+        &[],
+    )
+    .await
+    .ok()
+    .flatten()
+    .and_then(|m| m.get("value").and_then(|v| v.as_str()).map(|s| s.to_string()))
+    .unwrap_or_default();
+
+    let mut tongket = Value::Null;
+    if let Some(first) = rows.first() {
+        let hsid = first
+            .get("hocsinhid")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(0) as i32;
+        let hs = query_one_json(
+            client,
+            "SELECT COALESCE(h.sodu, 0)::bigint AS sodu,
+                    COALESCE((SELECT SUM(k.sotien - k.dathu) FROM kyhocphi k
+                               WHERE k.hocsinhid = h.hocsinhid AND k.trangthai = 'chuathu'
+                                 AND k.sotien > k.dathu), 0)::bigint AS no
+               FROM hocsinh h WHERE h.hocsinhid = $1",
+            &[&hsid],
+        )
+        .await
+        .map_err(map_db)?;
+        let dong: i64 = rows
+            .iter()
+            .map(|r| r.get("sotien").and_then(|v| v.as_i64()).unwrap_or(0))
+            .sum();
+        tongket = json!({
+            "dong": dong,
+            "ghisodu": arg_i64(args, "ghisodu").unwrap_or(0),
+            "tienck": arg_i64(args, "tienck"),
+            "sodu": hs.as_ref().and_then(|m| m.get("sodu").cloned()).unwrap_or(json!(0)),
+            "conno": hs.as_ref().and_then(|m| m.get("no").cloned()).unwrap_or(json!(0)),
+            "subset": true,
+        });
+    }
+
+    let text = format_receipt_text(&trungtam, &rows, &luuy, &tongket);
+    Ok(json!({
+        "trungtam": trungtam,
+        "rows": rows,
+        "luuy": luuy,
+        "tongket": tongket,
+        "text": text,
+        "subset": true,
+    }))
+}
+
+fn format_receipt_text(
+    tt: &Map<String, Value>,
+    rows: &[Map<String, Value>],
+    luuy: &str,
+    tongket: &Value,
+) -> String {
+    let mut o = String::new();
+    let ten = tt
+        .get("tentrungtam")
+        .and_then(|v| v.as_str())
+        .unwrap_or("TPS");
+    o.push_str(ten);
+    o.push('\n');
+    if let Some(s) = tt.get("diachi").and_then(|v| v.as_str()) {
+        if !s.is_empty() {
+            o.push_str(s);
+            o.push('\n');
+        }
+    }
+    if let Some(s) = tt.get("sdt").and_then(|v| v.as_str()) {
+        if !s.is_empty() {
+            o.push_str("ĐT: ");
+            o.push_str(s);
+            o.push('\n');
+        }
+    }
+    o.push_str("--------------------------------\n");
+    o.push_str("BIÊN LAI THU HỌC PHÍ\n");
+    o.push_str("--------------------------------\n");
+    if let Some(r0) = rows.first() {
+        o.push_str(&format!(
+            "HV: {} ({})\n",
+            r0.get("hotenhs").and_then(|v| v.as_str()).unwrap_or(""),
+            r0.get("mahocvien").and_then(|v| v.as_str()).unwrap_or("")
+        ));
+    }
+    for r in rows {
+        o.push_str(&format!(
+            "{} | {} | {} | {}\n",
+            r.get("makyhp").and_then(|v| v.as_str()).unwrap_or("-"),
+            r.get("tenlop").and_then(|v| v.as_str()).unwrap_or(""),
+            r.get("hinhthuc").and_then(|v| v.as_str()).unwrap_or(""),
+            r.get("sotien").and_then(|v| v.as_i64()).unwrap_or(0)
+        ));
+    }
+    o.push_str("--------------------------------\n");
+    if let Some(tk) = tongket.as_object() {
+        o.push_str(&format!(
+            "Tổng thu: {} đ\n",
+            tk.get("dong").and_then(|v| v.as_i64()).unwrap_or(0)
+        ));
+        o.push_str(&format!(
+            "Còn nợ: {} đ | Số dư: {} đ\n",
+            tk.get("conno").and_then(|v| v.as_i64()).unwrap_or(0),
+            tk.get("sodu").and_then(|v| v.as_i64()).unwrap_or(0)
+        ));
+    }
+    if !luuy.is_empty() {
+        o.push_str("Lưu ý: ");
+        o.push_str(luuy);
+        o.push('\n');
+    }
+    o.push_str("(S6 subset — in nhiệt/Windows port sau)\n");
+    o
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
