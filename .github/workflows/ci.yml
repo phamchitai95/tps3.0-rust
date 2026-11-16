@@ -42,6 +42,10 @@ jobs:
           ./scripts/init_dev_db.sh
       - name: Cargo test
         run: cargo test --workspace --exclude tps -- --test-threads=1
+      - name: S7 so sánh self-test (fixture dump)
+        run: |
+          chmod +x scripts/*.sh
+          ./scripts/so_sanh_selftest.sh
       - name: Frontend typecheck / build
         run: |
           npm ci

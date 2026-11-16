@@ -27,7 +27,23 @@ echo "== Restore $DUMP"
 if [[ "$DUMP" == *.sql ]]; then
   psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -v ON_ERROR_STOP=1 -f "$DUMP"
 else
-  pg_restore -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" --no-owner --role="$USER" "$DUMP" || true
+  # pg_restore exits 1 on warnings; treat as failure only if no tables
+  set +e
+  pg_restore -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" --no-owner --role="$USER" "$DUMP"
+  RC=$?
+  set -e
+  if [[ $RC -gt 1 ]]; then
+    echo "pg_restore failed (exit $RC)" >&2
+    exit "$RC"
+  fi
 fi
 
-echo "== OK: restored into $DB — run cargo test / so_sanh next"
+echo "== Verify"
+N="$(psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'")"
+echo "public tables: $N"
+if [[ "$N" -lt 5 ]]; then
+  echo "Restore looks empty — abort" >&2
+  exit 1
+fi
+
+echo "== OK: restored into $DB — next: ./scripts/so_sanh.sh"

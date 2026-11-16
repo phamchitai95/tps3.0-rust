@@ -52,6 +52,7 @@ impl Api {
         api.register("app.version", Arc::new(Version));
         api.register("app.checkUpdate", Arc::new(AppCheckUpdate));
         api.register("app.init", Arc::new(AppInit));
+        api.register("diag.soSanh", Arc::new(DiagSoSanh));
         api.register("auth.login", Arc::new(AuthLogin));
         api.register("auth.logout", Arc::new(AuthLogout));
         api.register("auth.me", Arc::new(AuthMe));
@@ -147,7 +148,7 @@ impl Handler for Ping {
 }
 
 /// App build number — bump mỗi sprint đóng gói.
-pub const APP_BUILD: i32 = 2;
+pub const APP_BUILD: i32 = 3;
 pub const APP_VERSION: &str = "0.1.0";
 /// Repo GitHub Releases dùng cho OTA (`owner/name`). Override: `TPS_OTA_REPO`.
 pub const DEFAULT_OTA_REPO: &str = "phamchitai95/tps3.0-rust";
@@ -337,6 +338,52 @@ impl Handler for AppInit {
             "ok": true,
             "tentrungtam": tt.and_then(|m| m.get("tentrungtam").cloned()),
             "migrateVersion": MIGRATE_VERSION,
+        }))
+    }
+}
+
+/// `diag.soSanh` — smoke counts + migrate trên DB hiện tại (S7; CLI đầy đủ: `tps-so-sanh`).
+struct DiagSoSanh;
+#[async_trait]
+impl Handler for DiagSoSanh {
+    async fn call(&self, state: &AppState, _args: Args) -> HandlerResult {
+        need(&*state.ctx.lock().await, role::CTV)?;
+        let client = client(state).await?;
+        let mig = query_one_json(
+            &client,
+            "SELECT value FROM app_meta WHERE key = 'migrate_version'",
+            &[],
+        )
+        .await
+        .map_err(db_err)?;
+        let mig_val = mig
+            .as_ref()
+            .and_then(|m| m.get("value").cloned())
+            .unwrap_or(json!(null));
+        async fn cnt(c: &deadpool_postgres::Object, t: &str) -> Result<i64, AppError> {
+            let sql = format!("SELECT COUNT(*)::bigint AS n FROM {t}");
+            Ok(query_one_json(c, &sql, &[])
+                .await
+                .map_err(db_err)?
+                .and_then(|m| m.get("n").and_then(|v| v.as_i64()))
+                .unwrap_or(0))
+        }
+        let counts = json!({
+            "hocsinh": cnt(&client, "hocsinh").await?,
+            "lophoc": cnt(&client, "lophoc").await?,
+            "giaovien": cnt(&client, "giaovien").await?,
+            "kyhocphi": cnt(&client, "kyhocphi").await?,
+            "phieuthutien": cnt(&client, "phieuthutien").await?,
+            "nhanvien": cnt(&client, "nhanvien").await?,
+        });
+        let hs = counts.get("hocsinh").and_then(|v| v.as_i64()).unwrap_or(0);
+        Ok(json!({
+            "ok": hs > 0,
+            "sprint": "S7",
+            "migrateVersion": mig_val,
+            "expectedMigrate": MIGRATE_VERSION,
+            "counts": counts,
+            "hint": "CLI: ./scripts/so_sanh.sh [private_data/qlth.dump]",
         }))
     }
 }

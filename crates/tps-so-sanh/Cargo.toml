@@ -1,0 +1,22 @@
+[package]
+name = "tps-so-sanh"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "S7 — smoke / so sánh trên DB qlth_so_sanh (backup thật)"
+publish = false
+
+[[bin]]
+name = "tps-so-sanh"
+path = "src/main.rs"
+
+[dependencies]
+tps-api = { workspace = true }
+tps-db = { workspace = true }
+tps-migrate = { workspace = true }
+tps-types = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+deadpool-postgres = { workspace = true }
