@@ -95,6 +95,7 @@ fn la_lenh_doc(ten: &str) -> bool {
         "app.ping",
         "app.version",
         "app.checkUpdate",
+        "diag.soSanh",
     ];
     if LENH_DOC.contains(&ten) {
         return true;

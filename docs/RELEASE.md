@@ -54,4 +54,5 @@ Rồi bật `bundle.createUpdaterArtifacts: true`, thêm `tauri-plugin-updater`,
 - S3: `ck.bankInfo|getSettings|saveSettings|qrPreview|processPay2s|gdList`  
 - S4/S4b: `luong.*`, `bl.*`, `phieuchi.list`  
 - S5: HTTP `POST /api/<cmd>` (`tps-web`)  
-- S6: `app.checkUpdate`, `hocphi.receipt`
+- S6: `app.checkUpdate`, `hocphi.receipt`  
+- S7: `diag.soSanh` + CLI `tps-so-sanh` (`docs/SO_SANH.md`)

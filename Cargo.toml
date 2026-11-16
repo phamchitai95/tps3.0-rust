@@ -12,6 +12,7 @@ members = [
   "crates/tps-payroll",
   "crates/tps-api",
   "crates/tps-web",
+  "crates/tps-so-sanh",
   "src-tauri",
 ]
 default-members = [
@@ -25,6 +26,7 @@ default-members = [
   "crates/tps-payroll",
   "crates/tps-api",
   "crates/tps-web",
+  "crates/tps-so-sanh",
 ]
 
 [workspace.package]

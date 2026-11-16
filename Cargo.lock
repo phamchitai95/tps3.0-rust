@@ -4876,6 +4876,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tps-so-sanh"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "deadpool-postgres",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tps-api",
+ "tps-db",
+ "tps-migrate",
+ "tps-types",
+]
+
+[[package]]
 name = "tps-tuition"
 version = "0.1.0"
 dependencies = [

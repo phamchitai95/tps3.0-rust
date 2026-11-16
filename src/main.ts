@@ -295,11 +295,12 @@ function extractReceiptIds(r: Record<string, Json>): number[] {
 
 async function renderHeThong(main: HTMLDivElement) {
   main.innerHTML = `
-    <h2 style="margin:0 0 .75rem;font:600 1.1rem Literata,serif">Hệ thống (S6)</h2>
-    <p class="meta">Phiên bản · kiểm tra cập nhật GitHub Releases · biên lai text gần nhất.</p>
+    <h2 style="margin:0 0 .75rem;font:600 1.1rem Literata,serif">Hệ thống (S6–S7)</h2>
+    <p class="meta">Phiên bản · OTA · diag.soSanh (counts trên DB hiện tại) · biên lai gần nhất.</p>
     <div class="row">
       <button type="button" id="ver">Xem phiên bản</button>
       <button type="button" id="ota" ${busy ? "disabled" : ""}>Kiểm tra cập nhật</button>
+      <button type="button" id="sosanh" ${busy ? "disabled" : ""}>So sánh DB</button>
     </div>
     <pre class="out" id="sysout" style="margin-top:1rem"></pre>
     ${lastReceiptText ? `<h2 style="margin:1rem 0 .5rem;font:600 1.05rem Literata,serif">Biên lai gần nhất</h2><pre class="out">${escapeHtml(lastReceiptText)}</pre>` : ""}
@@ -317,6 +318,13 @@ async function renderHeThong(main: HTMLDivElement) {
       const r = (await api("app.checkUpdate", {})) as Record<string, Json>;
       out().textContent = JSON.stringify(r, null, 2);
       setStatus(String(r.message || "Đã kiểm tra cập nhật."));
+    });
+  });
+  document.querySelector("#sosanh")!.addEventListener("click", () => {
+    void withBusy(async () => {
+      const r = (await api("diag.soSanh", {})) as Record<string, Json>;
+      out().textContent = JSON.stringify(r, null, 2);
+      setStatus(r.ok ? "DB có dữ liệu — xem counts." : "DB trống hoặc lỗi — xem JSON.");
     });
   });
   void withBusy(async () => {

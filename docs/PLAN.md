@@ -21,4 +21,4 @@ Baseline tham chiếu: tps59 build **276** / migrate **27**.
 7. **S4b** done (subset) — `bl.khautru|khautruXoa|chot|mo`, `bl.ck.ds|xuat|tai|huy` (CSV; xlsx MB sau)  
 8. **S5** done (subset) — `tps-web` axum: `POST /api/<cmd>`, Bearer session, `web.thongtin|maychu`, `/pay2s/push`  
 9. **S6** done (subset) — `app.checkUpdate` (GitHub Releases), `hocphi.receipt` (text biên lai)  
-10. S7 so sánh backup thật
+10. **S7** done (subset) — `restore_so_sanh` + `tps-so-sanh` / `diag.soSanh` + `docs/SO_SANH.md`

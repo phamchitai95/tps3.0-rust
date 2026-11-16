@@ -57,13 +57,14 @@ Config mẫu (Cloud/dev only — không dùng cho prod):
 
 Đặt file tại `$TPS_DATA_DIR/config.json` hoặc `%APPDATA%\TC59\config.json`.
 
-## Nạp backup thật để so sánh
+## Nạp backup thật để so sánh (S7)
 
 ```bash
-./scripts/restore_so_sanh.sh private_data/qlth.dump
+./scripts/so_sanh.sh private_data/qlth.dump   # restore + harness
+./scripts/so_sanh_selftest.sh                 # fixture qlth_test → so sánh
 ```
 
-Xem `private_data/README.md`.
+Xem `docs/SO_SANH.md`, `private_data/README.md`.
 
 ## Roadmap
 
@@ -76,6 +77,7 @@ Xem `private_data/README.md`.
 7. **S4b** done (subset) — `bl.chot` / khấu trừ / `bl.ck.*` (CSV)  
 8. **S5** done (subset) — `tps-web` HTTP API (`POST /api/<cmd>`, Pay2S push)  
 9. **S6** done (subset) — OTA check (`app.checkUpdate`) + biên lai text (`hocphi.receipt`)  
-10. S7 dump thật  
+10. **S7** done (subset) — so sánh backup (`tps-so-sanh` / `diag.soSanh`)  
+
 
 Chi tiết đóng gói: `docs/RELEASE.md`.
